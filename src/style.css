@@ -33,10 +33,17 @@
   --ws-indent: 16px;
   --ws-flow: var(--ws-space-4);
   --ws-flow-section: var(--ws-space-8);
+  /* The first paint's value; view.ts writes the header's measured height. */
+  --ws-run-head-room: 72px;
 }
 
 * {
   box-sizing: border-box;
+}
+/* Anchor jumps glide and stop clear of the sticky run header, as in the app. */
+html {
+  scroll-padding-top: calc(var(--ws-run-head-room) + 16px);
+  scroll-behavior: smooth;
 }
 body {
   margin: 0;
@@ -294,6 +301,39 @@ button {
 }
 
 /* The run: verdict and ledger on top, the story below. */
+/* The run header stays on screen while the story scrolls, as in the app's run
+   view, carrying the title, the ledger in one line and the replay control. */
+.ws-run-head {
+  position: sticky;
+  z-index: 15;
+  top: 0;
+  display: flex;
+  margin: 0 -32px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  border-bottom: 1px solid var(--ws-line);
+  /* Opaque, the page colour: nothing scrolled beneath shows through. */
+  background: var(--ws-bg);
+  padding: 10px 32px;
+}
+.ws-run-head .ws-run-name {
+  flex: 1;
+  min-width: min(12rem, 100%);
+}
+.ws-run-summary {
+  color: var(--ws-muted);
+  font-size: 12px;
+}
+.ws-run-summary[data-state="broken"] {
+  color: var(--ws-fail);
+}
+.ws-run-summary[data-state="agree"] {
+  color: var(--ws-pass);
+}
+.ws-run :is(section, tr, li, h2, h3, [id]) {
+  scroll-margin-top: calc(var(--ws-run-head-room) + 16px);
+}
 .ws-run-name {
   font-size: 15px;
   font-weight: 650;
@@ -586,6 +626,14 @@ button {
   .ws-main {
     padding: 0 16px 48px;
   }
+  .ws-run-head {
+    margin: 0 -16px;
+    padding: 8px 16px;
+  }
+  .ws-run-summary {
+    order: 3;
+    flex-basis: 100%;
+  }
   .ws-button-small {
     min-height: 44px;
   }
@@ -595,6 +643,11 @@ button {
   *,
   *::before,
   *::after {
+    animation: none !important;
     transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+    /* Reduced motion keeps colour and opacity changes, which help
+       comprehension, and drops movement. */
+    scale: none !important;
   }
 }

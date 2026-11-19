@@ -35,8 +35,33 @@ export function ledgerStatus(scenario: Scenario, ledger: Ledger): string {
   }
 }
 
+type LedgerParts = Readonly<{ status: string; sent: string; recorded: string }>;
+
+/** The ledger's state and totals as words, shared by the header and the live region. */
+export function ledgerParts(scenario: Scenario, ledger: Ledger): LedgerParts {
+  return {
+    status: ledgerStatus(scenario, ledger),
+    sent: `Sent ${formatCents(ledger.sent)}`,
+    recorded: `Recorded ${formatCents(ledger.recorded)}`,
+  };
+}
+
+/** The variable that keeps anchor jumps clear of the sticky run header. */
+export const HEAD_ROOM_VARIABLE = "--ws-run-head-room";
+
+/**
+ * Writes the sticky header's measured height to the page root, as the app
+ * does: the header wraps on narrow screens, so a fixed value would let anchor
+ * jumps stop underneath it.
+ */
+export function writeHeadRoom(pageRoot: HTMLElement, heightPx: number): void {
+  pageRoot.style.setProperty(HEAD_ROOM_VARIABLE, `${String(Math.ceil(heightPx))}px`);
+}
+
 type LedgerPanel = Readonly<{
   root: HTMLElement;
+  /** A one-line copy of the ledger for the sticky run header. */
+  summary: HTMLElement;
   show: (ledger: Ledger, announce: boolean) => void;
 }>;
 
@@ -65,6 +90,8 @@ export function ledgerPanel(scenario: Scenario): LedgerPanel {
   const recorded = ledgerRow("Service recorded", "is-recorded", null);
   const status = element("p", { class: "ws-ledger-status" });
   const live = element("p", { class: "sr-only", role: "status" });
+  // The live region already speaks the ledger; the header copy is visual only.
+  const summary = element("p", { class: "ws-run-summary ws-num", "aria-hidden": "true" });
   const balance =
     scenario.balance === undefined
       ? null
@@ -90,16 +117,19 @@ export function ledgerPanel(scenario: Scenario): LedgerPanel {
   }
   return {
     root,
+    summary,
     show(ledger, announce) {
       sent.value.textContent = formatCents(ledger.sent);
       recorded.value.textContent = formatCents(ledger.recorded);
       sent.fill.style.setProperty("--fill", String(ledger.sent / scale));
       recorded.fill.style.setProperty("--fill", String(ledger.recorded / scale));
-      status.textContent = ledgerStatus(scenario, ledger);
+      const parts = ledgerParts(scenario, ledger);
+      status.textContent = parts.status;
       root.dataset.state = ledger.state;
-      if (announce) {
-        live.textContent = `${status.textContent}. Sent ${sent.value.textContent}, recorded ${recorded.value.textContent}.`;
-      }
+      summary.dataset.state = ledger.state;
+      summary.textContent = `${parts.status} · ${parts.sent} · ${parts.recorded}`;
+      if (announce)
+        live.textContent = `${parts.status}. ${parts.sent}, ${parts.recorded}.`;
     },
   };
 }
@@ -261,14 +291,24 @@ export function renderScenario(scenario: Scenario): ScenarioView {
   });
 
   const title = element("h2", { class: "ws-run-name", tabindex: "-1" }, [scenario.title]);
-  const root = element("article", { class: "ws-stack" }, [
+  const header = element("header", { class: "ws-run-head" }, [
     title,
+    ledger.summary,
+    replayButton,
+  ]);
+  const headObserver =
+    typeof ResizeObserver === "undefined"
+      ? undefined
+      : new ResizeObserver((entries) => {
+          const size = entries[0]?.borderBoxSize[0];
+          if (size) writeHeadRoom(document.documentElement, size.blockSize);
+        });
+  headObserver?.observe(header);
+  const root = element("article", { class: "ws-run ws-stack" }, [
+    header,
     element("div", { class: "ws-run-top" }, [verdictSection(scenario), ledger.root]),
-    element("div", { class: "ws-button-row" }, [
-      replayButton,
-      element("span", { class: "ws-muted" }, [
-        "Pick a step to see the ledger at that moment.",
-      ]),
+    element("p", { class: "ws-muted" }, [
+      "Pick a step to see the ledger at that moment.",
     ]),
     element("ol", { class: "ws-story", "aria-label": "What happened" }, [
       ...steps.map(({ item }) => item),
@@ -278,5 +318,12 @@ export function renderScenario(scenario: Scenario): ScenarioView {
   ]);
 
   paint(false);
-  return { root, title, dispose: clearTimer };
+  return {
+    root,
+    title,
+    dispose: () => {
+      clearTimer();
+      headObserver?.disconnect();
+    },
+  };
 }

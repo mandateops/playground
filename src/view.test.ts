@@ -7,6 +7,9 @@ import {
   renderScenario,
   REPLAY_STEP_MS,
   stepLabel,
+  writeHeadRoom,
+  HEAD_ROOM_VARIABLE,
+  ledgerParts,
 } from "./view";
 
 const lostReply = scenarios.find((scenario) => scenario.slug === "lost-reply");
@@ -32,6 +35,24 @@ describe("stepLabel", () => {
   test("follows the app's pattern", () => {
     expect(stepLabel(0, false)).toBe("Step 1");
     expect(stepLabel(5, true)).toBe("Step 6, the problem");
+  });
+});
+
+describe("ledgerParts", () => {
+  test("words the state and both totals", () => {
+    expect(ledgerParts(lostReply, ledgerAt(lostReply, 2))).toEqual({
+      status: "Records not caught up yet",
+      sent: "Sent $250.00",
+      recorded: "Recorded $0.00",
+    });
+  });
+});
+
+describe("writeHeadRoom", () => {
+  test("writes the header height, rounded up, to the page root", () => {
+    const pageRoot = document.createElement("div");
+    writeHeadRoom(pageRoot, 82.4);
+    expect(pageRoot.style.getPropertyValue(HEAD_ROOM_VARIABLE)).toBe("83px");
   });
 });
 
@@ -94,6 +115,15 @@ describe("renderScenario", () => {
     stepButtons()[2]?.click();
     expect(currentIndex()).toBe(2);
     expect(ledgerValues()).toEqual(["$250.00", "$0.00"]);
+  });
+
+  test("the sticky header carries the ledger for the selected step", () => {
+    stepButtons()[2]?.click();
+    const summary = view.root.querySelector(".ws-run-head .ws-run-summary");
+    expect(summary?.textContent).toBe(
+      "Records not caught up yet · Sent $250.00 · Recorded $0.00",
+    );
+    expect(summary?.getAttribute("aria-hidden")).toBe("true");
   });
 
   test("every step stays in the tab order", () => {
