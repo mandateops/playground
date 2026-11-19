@@ -1,0 +1,57 @@
+import { describe, expect, test } from "bun:test";
+import { finalLedger, ledgerAt, problemIndex } from "./ledger";
+import type { Scenario } from "./scenario";
+
+const sample: Scenario = {
+  slug: "sample",
+  title: "Sample",
+  promise: "Money moves once.",
+  verdict: "fail",
+  outcome: "Paid twice.",
+  result: "Sent twice.",
+  fix: { pattern: "Use a key.", diff: "+ key" },
+  steps: [
+    { atMs: 0, actor: "Provider", text: "Sends.", sent: 100 },
+    { atMs: 1, actor: "Provider", text: "Sends again.", sent: 100, problem: true },
+    { atMs: 2, actor: "Service", text: "Records.", recorded: 100 },
+  ],
+};
+
+describe("ledgerAt", () => {
+  test("starts empty before any step", () => {
+    expect(ledgerAt(sample, -1)).toEqual({ sent: 0, recorded: 0, state: "agree" });
+  });
+
+  test("a gap before the problem step is in flight, not broken", () => {
+    expect(ledgerAt(sample, 0)).toEqual({ sent: 100, recorded: 0, state: "in-flight" });
+  });
+
+  test("breaks from the problem step onward", () => {
+    expect(ledgerAt(sample, 1).state).toBe("broken");
+  });
+
+  test("clamps an index past the last step", () => {
+    expect(ledgerAt(sample, 99)).toEqual(ledgerAt(sample, 2));
+  });
+
+  test("rejects a fractional or negative index", () => {
+    expect(() => ledgerAt(sample, 0.5)).toThrow(RangeError);
+    expect(() => ledgerAt(sample, -2)).toThrow(RangeError);
+  });
+});
+
+describe("finalLedger", () => {
+  test("sums every step", () => {
+    expect(finalLedger(sample)).toEqual({ sent: 200, recorded: 100, state: "broken" });
+  });
+});
+
+describe("problemIndex", () => {
+  test("finds the problem step", () => {
+    expect(problemIndex(sample)).toBe(1);
+  });
+
+  test("is -1 when the promise holds", () => {
+    expect(problemIndex({ ...sample, steps: [] })).toBe(-1);
+  });
+});

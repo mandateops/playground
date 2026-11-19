@@ -1,0 +1,145 @@
+import { afterEach, beforeEach, describe, expect, jest, test } from "bun:test";
+import { ledgerAt } from "./ledger";
+import { scenarios } from "./scenarios";
+import {
+  laterLine,
+  ledgerStatus,
+  renderScenario,
+  REPLAY_STEP_MS,
+  stepLabel,
+} from "./view";
+
+const lostReply = scenarios.find((scenario) => scenario.slug === "lost-reply");
+if (!lostReply) throw new Error("lost-reply scenario missing");
+
+describe("laterLine", () => {
+  test("says nothing for the first step or a short gap", () => {
+    expect(laterLine(lostReply.steps, 0)).toBeNull();
+    expect(laterLine(lostReply.steps, 1)).toBeNull();
+  });
+
+  test("words a gap of five seconds or more as the app does", () => {
+    const webhook = scenarios.find((scenario) => scenario.slug === "duplicate-webhook");
+    expect(laterLine(webhook?.steps ?? [], 4)).toBe("10 s later");
+  });
+
+  test("says nothing for an index past the end", () => {
+    expect(laterLine(lostReply.steps, 99)).toBeNull();
+  });
+});
+
+describe("stepLabel", () => {
+  test("follows the app's pattern", () => {
+    expect(stepLabel(0, false)).toBe("Step 1");
+    expect(stepLabel(5, true)).toBe("Step 6, the problem");
+  });
+});
+
+describe("ledgerStatus", () => {
+  test("names the 1-based problem step when broken", () => {
+    expect(ledgerStatus(lostReply, ledgerAt(lostReply, 5))).toBe("Fails at step 6");
+  });
+
+  test("says when records have not caught up", () => {
+    expect(ledgerStatus(lostReply, ledgerAt(lostReply, 2))).toBe(
+      "Records not caught up yet",
+    );
+  });
+
+  test("says when both sides agree", () => {
+    expect(ledgerStatus(lostReply, ledgerAt(lostReply, 0))).toBe("Both sides agree");
+  });
+});
+
+describe("renderScenario", () => {
+  let view: ReturnType<typeof renderScenario>;
+
+  const stepButtons = (): HTMLButtonElement[] => [
+    ...view.root.querySelectorAll<HTMLButtonElement>(".ws-story-select"),
+  ];
+  const stepItems = (): HTMLElement[] => [
+    ...view.root.querySelectorAll<HTMLElement>(".ws-story-step"),
+  ];
+  const currentIndex = (): number =>
+    stepButtons().findIndex((button) => button.getAttribute("aria-current") === "step");
+  const ledgerValues = (): string[] =>
+    [...view.root.querySelectorAll(".ws-ledger-value")].map(
+      (node) => node.textContent ?? "",
+    );
+  const replayButton = (): HTMLButtonElement => {
+    const button = [...view.root.querySelectorAll<HTMLButtonElement>("button")].find(
+      (each) => each.textContent === "Replay" || each.textContent === "Stop",
+    );
+    if (!button) throw new Error("no replay button");
+    return button;
+  };
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    view = renderScenario(lostReply);
+    document.body.replaceChildren(view.root);
+  });
+
+  afterEach(() => {
+    view.dispose();
+    jest.useRealTimers();
+  });
+
+  test("starts on the last step with the final ledger", () => {
+    expect(currentIndex()).toBe(lostReply.steps.length - 1);
+    expect(ledgerValues()).toEqual(["$500.00", "$250.00"]);
+  });
+
+  test("clicking a step moves the cursor and the ledger", () => {
+    stepButtons()[2]?.click();
+    expect(currentIndex()).toBe(2);
+    expect(ledgerValues()).toEqual(["$250.00", "$0.00"]);
+  });
+
+  test("every step stays in the tab order", () => {
+    expect(stepButtons().every((button) => button.tabIndex === 0)).toBe(true);
+  });
+
+  test("steps after the cursor are pending and not yet called the problem", () => {
+    stepButtons()[2]?.click();
+    const problem = stepItems()[5];
+    expect(problem?.classList.contains("is-pending")).toBe(true);
+    expect(problem?.getAttribute("aria-label")).toBe("Step 6");
+    stepButtons()[5]?.click();
+    expect(problem?.classList.contains("is-pending")).toBe(false);
+    expect(problem?.getAttribute("aria-label")).toBe("Step 6, the problem");
+  });
+
+  test("replay advances one step per interval and stops at the end", () => {
+    replayButton().click();
+    expect(currentIndex()).toBe(0);
+    expect(replayButton().textContent).toBe("Stop");
+    jest.advanceTimersByTime(REPLAY_STEP_MS * 2);
+    expect(currentIndex()).toBe(2);
+    jest.advanceTimersByTime(REPLAY_STEP_MS * lostReply.steps.length);
+    expect(currentIndex()).toBe(lostReply.steps.length - 1);
+    expect(replayButton().textContent).toBe("Replay");
+  });
+
+  test("clicking Stop halts the replay", () => {
+    replayButton().click();
+    jest.advanceTimersByTime(REPLAY_STEP_MS);
+    replayButton().click();
+    const stoppedAt = currentIndex();
+    jest.advanceTimersByTime(REPLAY_STEP_MS * 3);
+    expect(currentIndex()).toBe(stoppedAt);
+    expect(replayButton().textContent).toBe("Replay");
+  });
+
+  test("dispose clears a running replay", () => {
+    replayButton().click();
+    view.dispose();
+    jest.advanceTimersByTime(REPLAY_STEP_MS * 3);
+    expect(currentIndex()).toBe(0);
+  });
+
+  test("the title can take focus", () => {
+    view.title.focus();
+    expect(document.activeElement).toBe(view.title);
+  });
+});

@@ -1,0 +1,600 @@
+/* The MandateOps workspace look: the same tokens, type, spacing and
+   components as a run in the app. One accent, for the primary action. */
+:root {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --press-duration: 160ms;
+  --hover-duration: 150ms;
+  --ws-ink: #0b0d12;
+  --ws-text: #1f2430;
+  --ws-muted: #545b68;
+  --ws-line: #e3e5ea;
+  --ws-line-strong: #c9cdd5;
+  --ws-bg: #f7f7f8;
+  --ws-surface: #ffffff;
+  --ws-accent: #3730a3;
+  --ws-accent-hover: #312e81;
+  --ws-focus: #4f46e5;
+  --ws-fail: #b42318;
+  --ws-fail-bg: #fef3f2;
+  --ws-pass: #05603a;
+  --ws-pass-bg: #ecfdf3;
+  --ws-unknown: #475467;
+  --ws-unknown-bg: #f2f4f7;
+  --ws-radius: 8px;
+  --ws-space-1: 4px;
+  --ws-space-2: 8px;
+  --ws-space-3: 12px;
+  --ws-space-4: 16px;
+  --ws-space-5: 20px;
+  --ws-space-6: 24px;
+  --ws-space-8: 32px;
+  --ws-indent: 16px;
+  --ws-flow: var(--ws-space-4);
+  --ws-flow-section: var(--ws-space-8);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--ws-bg);
+  color: var(--ws-text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3 {
+  color: var(--ws-ink);
+}
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+pre {
+  margin: 0;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--ws-focus);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ws-skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 30;
+  border-radius: var(--ws-radius);
+  background: var(--ws-surface);
+  padding: 8px 12px;
+  translate: 0 -200%;
+}
+.ws-skip:focus {
+  translate: 0 0;
+}
+
+/* Shell: a sidebar of replays and the run beside it. */
+.ws {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+.ws-side {
+  border-right: 1px solid var(--ws-line);
+  background: var(--ws-surface);
+}
+.ws-side-inner {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100dvh;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+}
+.ws-brand {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--ws-ink);
+  font-weight: 600;
+}
+.ws-brand span {
+  color: var(--ws-muted);
+  font-weight: 400;
+}
+.ws-label {
+  color: var(--ws-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.ws-side .ws-label {
+  padding: 0 10px;
+}
+.ws-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ws-nav-item {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: var(--ws-muted);
+  font-weight: 500;
+}
+.ws-nav-item.is-active {
+  background: var(--ws-unknown-bg);
+  color: var(--ws-ink);
+  font-weight: 600;
+}
+.ws-nav-state {
+  font-size: 12px;
+  font-weight: 500;
+}
+.ws-nav-state.is-fail {
+  color: var(--ws-fail);
+}
+.ws-nav-state.is-pass {
+  color: var(--ws-pass);
+}
+.ws-side-foot {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  border-top: 1px solid var(--ws-line);
+  padding: 12px 10px 0;
+  color: var(--ws-muted);
+  font-size: 13px;
+}
+
+.ws-main {
+  min-width: 0;
+  padding: 0 32px 64px;
+}
+.ws-view {
+  max-width: 1040px;
+  padding-top: 24px;
+}
+.ws-view > :not(:first-child),
+.ws-stack > :not(:first-child) {
+  margin-top: var(--ws-flow);
+}
+.ws-view-head h1 {
+  font-size: 22px;
+  font-weight: 650;
+  text-wrap: balance;
+}
+.ws-lede {
+  max-width: 62ch;
+  margin-top: var(--ws-space-1);
+  color: var(--ws-muted);
+  font-size: 15px;
+  text-wrap: pretty;
+}
+.ws-section-title {
+  font-size: 15px;
+  font-weight: 650;
+  text-wrap: balance;
+}
+.ws-view > .ws-section-title:not(:first-child) {
+  margin-top: var(--ws-flow-section);
+}
+.ws-muted {
+  color: var(--ws-muted);
+  font-size: 13px;
+}
+.ws-num {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Buttons */
+.ws-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--ws-radius);
+  padding: 0 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ws-button,
+.ws-nav-item {
+  transition:
+    scale var(--press-duration) var(--ease-out),
+    background-color var(--hover-duration) ease,
+    border-color var(--hover-duration) ease,
+    color var(--hover-duration) ease;
+}
+.ws-button:active,
+.ws-nav-item:active {
+  scale: 0.97;
+}
+.ws-button-primary {
+  background: var(--ws-accent);
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(11 13 18 / 0.18);
+}
+.ws-button-secondary {
+  border-color: var(--ws-line-strong);
+  background: var(--ws-surface);
+  color: var(--ws-ink);
+}
+.ws-button-small {
+  min-height: 32px;
+  padding: 0 var(--ws-space-3);
+  font-size: 13px;
+}
+.ws-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+/* The story row changes colour only, like the app's trace rows. */
+.ws-story-select {
+  transition: background-color var(--hover-duration) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ws-nav-item:not(.is-active):hover {
+    color: var(--ws-ink);
+  }
+  .ws-button-primary:hover {
+    background: var(--ws-accent-hover);
+  }
+  .ws-button-secondary:hover {
+    background: var(--ws-bg);
+  }
+  .ws-story-select:hover {
+    background: color-mix(in srgb, var(--ws-ink) 3%, transparent);
+  }
+}
+
+/* The run: verdict and ledger on top, the story below. */
+.ws-run-name {
+  font-size: 15px;
+  font-weight: 650;
+  text-wrap: balance;
+}
+.ws-run-name:focus {
+  outline: none;
+}
+.ws-run-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.ws-verdict,
+.ws-note {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid var(--ws-line);
+  border-radius: var(--ws-radius);
+  background: var(--ws-surface);
+  padding: 16px;
+}
+.ws-verdict {
+  font-size: 15px;
+}
+/* State reads from the badge colour and a faint tint, never an edge bar. */
+.ws-verdict-fail {
+  background: var(--ws-fail-bg);
+}
+.ws-verdict-pass {
+  background: var(--ws-pass-bg);
+}
+.ws-verdict-badge {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ws-verdict-fail .ws-verdict-badge {
+  color: var(--ws-fail);
+}
+.ws-verdict-pass .ws-verdict-badge {
+  color: var(--ws-pass);
+}
+.ws-headline {
+  display: grid;
+  gap: 6px;
+}
+.ws-headline-verdict {
+  color: var(--ws-ink);
+  font-weight: 600;
+}
+
+/* Ledger: what the provider sent against what the service recorded. */
+.ws-ledger-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+}
+.ws-ledger-row + .ws-ledger-row {
+  margin-top: 4px;
+}
+.ws-ledger-value {
+  color: var(--ws-ink);
+  font-weight: 600;
+}
+.ws-ledger-track {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--ws-unknown-bg);
+}
+.ws-ledger-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  scale: var(--fill, 0) 1;
+  border-radius: 3px;
+  background: var(--ws-ink);
+  transition: scale 200ms var(--ease-out);
+}
+.ws-ledger-fill.is-recorded {
+  background: var(--ws-muted);
+}
+.ws-ledger-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--balance) * 100%);
+  width: 2px;
+  background: var(--ws-fail);
+}
+.ws-ledger-swatch {
+  display: inline-block;
+  width: 2px;
+  height: 10px;
+  margin-right: 6px;
+  background: var(--ws-fail);
+  vertical-align: -1px;
+}
+.ws-ledger-status {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ws-note[data-state="broken"] .ws-ledger-status {
+  color: var(--ws-fail);
+}
+.ws-note[data-state="agree"] .ws-ledger-status {
+  color: var(--ws-pass);
+}
+.ws-note[data-state="in-flight"] .ws-ledger-status {
+  color: var(--ws-muted);
+}
+
+/* The story: numbered steps as in the app; picking one moves the ledger
+   there. The selected step carries a ring, which the problem tint cannot
+   hide; steps after the cursor are muted, never faded. */
+.ws-story {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ws-story-step {
+  border-top: 1px solid var(--ws-line);
+}
+.ws-story-step.is-problem,
+.ws-story-step.is-current {
+  margin: 0 calc(-1 * var(--ws-space-3));
+  border-radius: var(--ws-radius);
+  padding: 0 var(--ws-space-3);
+}
+.ws-story-step.is-current {
+  box-shadow: inset 0 0 0 1px var(--ws-ink);
+}
+.ws-story-step:has(:focus-visible) {
+  outline: 2px solid var(--ws-focus);
+  outline-offset: 2px;
+}
+.ws-story-step:first-child {
+  border-top: 0;
+}
+.ws-story-select {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--ws-space-3);
+  border: 0;
+  border-radius: var(--ws-radius);
+  background: none;
+  padding: var(--ws-space-3) 0;
+  color: inherit;
+  text-align: left;
+}
+.ws-story-select:focus-visible {
+  outline: none;
+}
+.ws-story-number {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--ws-line-strong);
+  border-radius: 999px;
+  color: var(--ws-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.ws-story-body {
+  display: grid;
+  min-width: 0;
+  gap: var(--ws-space-1);
+}
+.ws-story-later {
+  color: var(--ws-muted);
+  font-size: 12px;
+}
+.ws-story-text {
+  color: var(--ws-ink);
+  text-wrap: pretty;
+}
+.ws-story-actor {
+  margin-right: var(--ws-space-1);
+  color: var(--ws-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ws-story-step.is-pending .ws-story-text {
+  color: var(--ws-muted);
+}
+.ws-story-step.is-pending .ws-story-number {
+  border-style: dashed;
+  color: var(--ws-muted);
+  font-weight: 500;
+}
+.ws-story-step.is-problem:not(.is-pending) {
+  background: var(--ws-fail-bg);
+}
+.ws-story-step.is-problem:not(.is-pending) .ws-story-number {
+  border-style: solid;
+  border-color: var(--ws-fail);
+  background: var(--ws-fail);
+  color: #fff;
+}
+.ws-story-step.is-problem:not(.is-pending) .ws-story-text {
+  color: var(--ws-fail);
+  font-weight: 600;
+}
+.ws-story-result {
+  border-top: 1px solid var(--ws-line-strong);
+  margin-bottom: var(--ws-space-5);
+  padding: var(--ws-space-3) 0 0 calc(28px + var(--ws-space-3));
+  color: var(--ws-ink);
+  font-weight: 600;
+}
+
+/* How to fix */
+.ws-story-fix {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ws-space-3);
+  max-width: 720px;
+}
+.ws-raw {
+  overflow: auto;
+  border-radius: var(--ws-radius);
+  background: #11131a;
+  padding: 14px;
+  color: #e7e9ee;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.ws-diff span {
+  display: block;
+}
+.ws-diff .is-add {
+  color: #86efac;
+}
+.ws-diff .is-del {
+  color: #fca5a5;
+}
+
+@media (max-width: 900px) {
+  .ws-run-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Phones: the sidebar becomes a top bar. */
+@media (max-width: 760px) {
+  .ws {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ws-side {
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--ws-line);
+  }
+  .ws-side-inner {
+    position: static;
+    height: auto;
+    gap: 4px;
+    padding: 6px 16px 0;
+  }
+  .ws-side .ws-label,
+  .ws-side-foot {
+    display: none;
+  }
+  .ws-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .ws-nav-item {
+    min-height: 44px;
+    flex: none;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .ws-nav-state {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ws-main {
+    padding: 0 16px 48px;
+  }
+  .ws-button-small {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+  }
+}

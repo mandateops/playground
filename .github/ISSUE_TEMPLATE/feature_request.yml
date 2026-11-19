@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a change to MandateOps Audit.
+title: "[FEAT]: "
+labels: ["type: feature"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: Who benefits and what they can test that they cannot today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: The concrete API or behaviour change.
+    validations:
+      required: true
+  - type: textarea
+    id: exclusions
+    attributes:
+      label: Out of scope
+      description: Related additions you are deliberately not asking for.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Acceptance criteria
+      description: Observable pass or fail conditions, as checkboxes.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Boundaries
+      options:
+        - label: No credentials, keys or customer data are included.
+          required: true

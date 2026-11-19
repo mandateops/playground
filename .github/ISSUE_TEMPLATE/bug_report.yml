@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a defect in MandateOps Audit.
+title: "[FIX]: "
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What the defect blocks or gets wrong, such as a wrong verdict, a refused valid declaration or a broken test run. Do not paste secrets, keys or customer data.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal test file or declaration and the exact command.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "@mandateops/audit and mandateops CLI versions, Bun or Node version, OS."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted output
+      description: Error text or the run's ci-result summary, with credentials and personal data removed.

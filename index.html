@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MandateOps playground</title>
+    <meta
+      name="description"
+      content="Payout bugs replayed step by step: where the money and the records stop agreeing, and how to fix it."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <button type="button" class="ws-skip" id="skip">Skip to the replay</button>
+    <div class="ws">
+      <aside class="ws-side">
+        <div class="ws-side-inner">
+          <a class="ws-brand" href="%VITE_SITE_URL%"
+            >MandateOps <span>playground</span></a
+          >
+          <nav aria-labelledby="replays-label">
+            <p id="replays-label" class="ws-label">Replays</p>
+            <ul id="picker" class="ws-nav"></ul>
+          </nav>
+          <div class="ws-side-foot">
+            <a href="%VITE_REPO_URL%">Source code</a>
+            <span>MIT licence</span>
+          </div>
+        </div>
+      </aside>
+      <main class="ws-main">
+        <div class="ws-view">
+          <header class="ws-view-head">
+            <h1>Payout bugs, replayed</h1>
+            <p class="ws-lede">
+              We wrote these replays by hand. The service and the provider are made up,
+              and the bugs are common ones.
+            </p>
+          </header>
+          <div id="stage" class="ws-stack" tabindex="-1"></div>
+          <h2 class="ws-section-title">Test your own service</h2>
+          <div class="ws-note">
+            <p>
+              MandateOps runs your payout service against a test provider that drops
+              replies and repeats events, lets your service crash mid-payout, then reports
+              pass or fail.
+            </p>
+            <div class="ws-button-row">
+              <a class="ws-button ws-button-primary" href="%VITE_GUIDE_URL%"
+                >Read the getting started guide</a
+              >
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

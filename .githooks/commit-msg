@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Checks the commit subject against the conventional-commit form and rejects
+# assistant attribution trailers. Body prose is not scanned, and nothing
+# below Git's scissors line (the diff shown by `commit --verbose`) is read.
+set -euo pipefail
+
+message="$(sed '/^# -\{24\} >8 -\{24\}$/,$d' "$1" | grep -v '^#' || true)"
+subject="${message%%$'\n'*}"
+
+# Git's own merge, revert and autosquash subjects are accepted as written.
+generated='^(Merge |Revert "|fixup! |squash! |amend! )'
+conventional='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._/-]+\))?!?: [^ ].*$'
+if [[ ! "$subject" =~ $generated ]]; then
+  if [[ ! "$subject" =~ $conventional ]]; then
+    echo "commit-msg: subject must be 'type(scope): summary', type one of" >&2
+    echo "  build chore ci docs feat fix perf refactor revert style test" >&2
+    exit 1
+  fi
+  if (( ${#subject} > 72 )); then
+    echo "commit-msg: subject is ${#subject} characters; keep it to 72" >&2
+    exit 1
+  fi
+fi
+
+# A co-author trailer naming an AI product or vendor address, or a
+# tool-generated attribution line. Human names are never matched.
+assistant='(claude|anthropic|openai|chatgpt|copilot|codex|gemini)'
+co_author="^co-authored-by:[[:space:]]*.*$assistant"
+generated_line='^(🤖[[:space:]]*generated|generated with \[claude)'
+if grep -Eiq -e "$co_author" -e "$generated_line" <<< "$message"; then
+  echo "commit-msg: remove assistant co-author or attribution trailers" >&2
+  exit 1
+fi

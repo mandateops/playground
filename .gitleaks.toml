@@ -1,0 +1,7 @@
+# The default rules, skipping installed and built files.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Installed dependencies and build output"
+paths = ['''(^|/)node_modules/''', '''(^|/)dist/''']

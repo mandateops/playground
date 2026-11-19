@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://getmandateops.com/security
+    about: Report vulnerabilities privately, never in a public issue.
+  - name: Questions about the CLI or hosted runs
+    url: mailto:hello@getmandateops.com
+    about: Email us about the mandateops CLI, hosted runs or your workspace.
