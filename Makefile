@@ -1,4 +1,4 @@
-.PHONY: install dev build check leaks hooks
+.PHONY: install dev build check gates leaks hooks
 
 # gitleaks v8.30.1, pinned by digest; CI runs the same target.
 GITLEAKS_IMAGE := zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
@@ -12,11 +12,20 @@ dev:
 build:
 	bun run build
 
-check:
+check: gates
 	bun run typecheck
 	bun run lint
 	bun run format:check
 	bun test
+
+# The source gates over the whole tree: dangling inline types, single-character
+# names, decorative separators, trailing comments and hard-wrapped Markdown.
+gates:
+	./scripts/checkDanglingTypes.sh
+	./scripts/checkIdentifierNames.sh
+	./scripts/checkDecorativeSeparators.sh
+	./scripts/checkTrailingComments.sh
+	./scripts/checkMarkdownWrap.sh
 
 # Scans the full git history and the working tree for secrets.
 leaks:

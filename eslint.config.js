@@ -2,7 +2,9 @@ import tseslint from "typescript-eslint";
 import prettierConfig from "eslint-config-prettier/flat";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "node_modules/**"] },
+  // The source gates in scripts/ are copied from the masters repository and run
+  // by Node or Bun; they are not part of the typed site build.
+  { ignores: ["dist/**", "node_modules/**", "scripts/**"] },
   ...tseslint.configs.recommendedTypeChecked,
   {
     languageOptions: {

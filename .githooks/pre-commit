@@ -1,6 +1,45 @@
 #!/usr/bin/env bash
-# Runs the same checks as CI before each commit.
+# Runs the source gates on what this commit changes, then the same checks as CI.
+# The gates come from the masters repository's lefthook setup, with the same
+# file globs: dangling inline types, single-character names, decorative
+# separators and trailing comments fail only on lines this commit adds; YAML,
+# TOML, shell and workflow files are parsed when staged.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 git diff --cached --check
+
+staged=()
+while IFS= read -r -d '' path; do
+  staged+=("$path")
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+
+# Staged files whose path matches an extended regular expression.
+matching() {
+  local pattern="$1" path
+  for path in "${staged[@]}"; do
+    if [[ "$path" =~ $pattern ]]; then printf '%s\0' "$path"; fi
+  done
+}
+
+# Runs a gate on the staged files that match a pattern, if there are any.
+gate() {
+  local pattern="$1"
+  shift
+  local files=()
+  while IFS= read -r -d '' path; do files+=("$path"); done < <(matching "$pattern")
+  if ((${#files[@]})); then "$@" "${files[@]}"; fi
+}
+
+if ((${#staged[@]})); then
+  gate '\.(ts|vue)$' ./scripts/checkDanglingTypes.sh --staged
+  gate '\.(ts|vue)$' ./scripts/checkIdentifierNames.sh --staged
+  gate '\.(ts|js|vue|rs)$' ./scripts/checkDecorativeSeparators.sh --staged
+  gate '\.(ts|js|vue|rs)$' ./scripts/checkTrailingComments.sh --staged
+  gate '\.md$' ./scripts/checkMarkdownWrap.sh --staged
+  gate '\.(yml|yaml)$' ./scripts/checkYaml.sh
+  gate '\.toml$' ./scripts/checkToml.sh
+  gate '\.(sh|bash)$' ./scripts/checkShell.sh
+  gate '^\.github/workflows/.*\.(yml|yaml)$' ./scripts/checkActions.sh
+fi
+
 make check

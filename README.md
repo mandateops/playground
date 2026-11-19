@@ -31,7 +31,7 @@ Then open http://localhost:5173.
 make check
 ```
 
-This runs the type checker, ESLint, Prettier and the tests. The tests check the ledger arithmetic and that every replay is consistent: steps in time order, exactly one problem step in each failing replay, and a final ledger that matches the verdict.
+This runs the source gates (no dangling inline types, no single-character names, no decorative or trailing comments, no hard-wrapped Markdown), the type checker, ESLint, Prettier and the tests. The commit hook runs the same gates on the lines you change; install it with `make hooks`. The tests check the ledger arithmetic and that every replay is consistent: steps in time order, exactly one problem step in each failing replay, and a final ledger that matches the verdict.
 
 ## Add a replay
 
