@@ -1,5 +1,5 @@
 /**
- * The running ledger: what the provider sent against what the service
+ * The running ledger: what the provider moved against what the backend
  * recorded, up to a chosen step.
  */
 import { addCents, type Cents } from "./money";
@@ -12,7 +12,7 @@ import type { Scenario } from "./scenario";
 export type LedgerState = "agree" | "in-flight" | "broken";
 
 export type Ledger = Readonly<{
-  sent: Cents;
+  moved: Cents;
   recorded: Cents;
   state: LedgerState;
 }>;
@@ -28,20 +28,20 @@ export function ledgerAt(scenario: Scenario, through: number): Ledger {
     throw new RangeError("step index out of range");
   }
   const last = Math.min(through, scenario.steps.length - 1);
-  let sent: Cents = 0;
+  let moved: Cents = 0;
   let recorded: Cents = 0;
   for (const step of scenario.steps.slice(0, last + 1)) {
-    sent = addCents(sent, step.sent ?? 0);
+    moved = addCents(moved, step.moved ?? 0);
     recorded = addCents(recorded, step.recorded ?? 0);
   }
   const problem = problemIndex(scenario);
   const state: LedgerState =
     problem !== -1 && last >= problem
       ? "broken"
-      : sent === recorded
+      : moved === recorded
         ? "agree"
         : "in-flight";
-  return { sent, recorded, state };
+  return { moved, recorded, state };
 }
 
 /** The ledger once every step has run. */

@@ -3,7 +3,7 @@
  * can be tested against a DOM.
  */
 import { element } from "./dom";
-import { verdictLabel, type Scenario } from "./scenario";
+import { FLOW_LABELS, FLOWS, verdictLabel, type Scenario } from "./scenario";
 import { renderScenario, type ScenarioView } from "./view";
 
 export type PlaygroundPage = Readonly<{
@@ -34,16 +34,48 @@ export function scenarioFor(
   return scenarios.find((each) => each.slug === slug) ?? scenarios[0];
 }
 
-export function mountPlayground(page: PlaygroundPage): void {
-  const links = page.scenarios.map((scenario) =>
-    element("a", { href: `#${scenario.slug}`, class: "ws-nav-item" }, [
-      scenario.title,
-      element("span", { class: `ws-nav-state is-${scenario.verdict}` }, [
-        verdictLabel(scenario.verdict),
-      ]),
+/** One picker link for a replay, with its verdict. */
+function replayLink(scenario: Scenario): HTMLAnchorElement {
+  return element("a", { href: `#${scenario.slug}`, class: "ws-nav-item" }, [
+    scenario.title,
+    element("span", { class: `ws-nav-state is-${scenario.verdict}` }, [
+      verdictLabel(scenario.verdict),
     ]),
-  );
-  page.picker.append(...links.map((link) => element("li", {}, [link])));
+  ]);
+}
+
+/**
+ * Scrolls an overflowing picker sideways so the link is in view. Horizontal
+ * only, so a route change never moves the page; a picker that fits is left alone.
+ */
+export function revealSideways(picker: HTMLElement, link: HTMLElement): void {
+  if (picker.scrollWidth <= picker.clientWidth) return;
+  const offset = link.getBoundingClientRect().left - picker.getBoundingClientRect().left;
+  const gutter = parseFloat(getComputedStyle(picker).paddingLeft || "0");
+  picker.scrollLeft += offset - gutter;
+}
+
+export function mountPlayground(page: PlaygroundPage): void {
+  const links: HTMLAnchorElement[] = [];
+  // One labelled group per money flow, in the canonical flow order; empty flows are skipped.
+  for (const flow of FLOWS) {
+    const flowLinks = page.scenarios
+      .filter((scenario) => scenario.flow === flow)
+      .map(replayLink);
+    if (flowLinks.length === 0) continue;
+    links.push(...flowLinks);
+    const labelId = `flow-${flow}`;
+    page.picker.append(
+      element("li", { class: "ws-nav-group" }, [
+        element("p", { class: "ws-nav-group-label", id: labelId }, [FLOW_LABELS[flow]]),
+        element(
+          "ul",
+          { class: "ws-nav-list", "aria-labelledby": labelId },
+          flowLinks.map((link) => element("li", {}, [link])),
+        ),
+      ]),
+    );
+  }
 
   let current: ScenarioView | undefined;
 
@@ -59,8 +91,10 @@ export function mountPlayground(page: PlaygroundPage): void {
     for (const link of links) {
       const active = link.getAttribute("href") === `#${scenario.slug}`;
       link.classList.toggle("is-active", active);
-      if (active) link.setAttribute("aria-current", "page");
-      else link.removeAttribute("aria-current");
+      if (active) {
+        link.setAttribute("aria-current", "page");
+        revealSideways(page.picker, link);
+      } else link.removeAttribute("aria-current");
     }
     page.document.title = `${scenario.title} · MandateOps playground`;
     if (moveFocus) current.title.focus();

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
-import { mountPlayground, scenarioFor, slugOf } from "./playground";
+import { mountPlayground, revealSideways, scenarioFor, slugOf } from "./playground";
+import { FLOW_LABELS, FLOWS } from "./scenario";
 import { scenarios } from "./scenarios";
 
 describe("slugOf", () => {
@@ -20,6 +21,30 @@ describe("scenarioFor", () => {
 
   test("falls back to the first scenario for an unknown slug", () => {
     expect(scenarioFor(scenarios, "nope")?.slug).toBe(scenarios[0]?.slug);
+  });
+});
+
+describe("revealSideways", () => {
+  function sized(scrollWidth: number, clientWidth: number): HTMLElement {
+    const picker = document.createElement("ul");
+    Object.defineProperty(picker, "scrollWidth", { value: scrollWidth });
+    Object.defineProperty(picker, "clientWidth", { value: clientWidth });
+    picker.getBoundingClientRect = () => ({ left: 0 }) as DOMRect;
+    return picker;
+  }
+  const link = document.createElement("a");
+  link.getBoundingClientRect = () => ({ left: 300 }) as DOMRect;
+
+  test("leaves a picker that fits alone", () => {
+    const picker = sized(200, 200);
+    revealSideways(picker, link);
+    expect(picker.scrollLeft).toBe(0);
+  });
+
+  test("scrolls an overflowing picker to the link", () => {
+    const picker = sized(1000, 200);
+    revealSideways(picker, link);
+    expect(picker.scrollLeft).toBe(300);
   });
 });
 
@@ -67,6 +92,24 @@ describe("mountPlayground", () => {
   test("lists every replay with its verdict", () => {
     expect(picker.querySelectorAll("a").length).toBe(scenarios.length);
     expect(picker.textContent).toContain("Passed");
+  });
+
+  test("groups replays under one labelled list per money flow", () => {
+    const labels = [...picker.querySelectorAll(".ws-nav-group-label")].map(
+      (node) => node.textContent,
+    );
+    expect(labels).toEqual(FLOWS.map((flow) => FLOW_LABELS[flow]));
+    const refunds = picker.querySelector('[aria-labelledby="flow-refund"]');
+    expect(refunds?.querySelectorAll("a").length).toBe(
+      scenarios.filter((scenario) => scenario.flow === "refund").length,
+    );
+  });
+
+  test("lists every replay exactly once across the groups", () => {
+    const hrefs = [...picker.querySelectorAll(".ws-nav-group a")].map((link) =>
+      link.getAttribute("href"),
+    );
+    expect(hrefs.sort()).toEqual(scenarios.map((scenario) => `#${scenario.slug}`).sort());
   });
 
   test("shows the first replay with no hash", () => {

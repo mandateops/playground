@@ -4,6 +4,7 @@ import type { Scenario } from "./scenario";
 
 const sample: Scenario = {
   slug: "sample",
+  flow: "refund",
   title: "Sample",
   promise: "Money moves once.",
   verdict: "fail",
@@ -11,19 +12,19 @@ const sample: Scenario = {
   result: "Sent twice.",
   fix: { pattern: "Use a key.", diff: "+ key" },
   steps: [
-    { atMs: 0, actor: "Provider", text: "Sends.", sent: 100 },
-    { atMs: 1, actor: "Provider", text: "Sends again.", sent: 100, problem: true },
-    { atMs: 2, actor: "Service", text: "Records.", recorded: 100 },
+    { atMs: 0, actor: "Provider", text: "Sends.", moved: 100 },
+    { atMs: 1, actor: "Provider", text: "Sends again.", moved: 100, problem: true },
+    { atMs: 2, actor: "Backend", text: "Records.", recorded: 100 },
   ],
 };
 
 describe("ledgerAt", () => {
   test("starts empty before any step", () => {
-    expect(ledgerAt(sample, -1)).toEqual({ sent: 0, recorded: 0, state: "agree" });
+    expect(ledgerAt(sample, -1)).toEqual({ moved: 0, recorded: 0, state: "agree" });
   });
 
   test("a gap before the problem step is in flight, not broken", () => {
-    expect(ledgerAt(sample, 0)).toEqual({ sent: 100, recorded: 0, state: "in-flight" });
+    expect(ledgerAt(sample, 0)).toEqual({ moved: 100, recorded: 0, state: "in-flight" });
   });
 
   test("breaks from the problem step onward", () => {
@@ -42,7 +43,7 @@ describe("ledgerAt", () => {
 
 describe("finalLedger", () => {
   test("sums every step", () => {
-    expect(finalLedger(sample)).toEqual({ sent: 200, recorded: 100, state: "broken" });
+    expect(finalLedger(sample)).toEqual({ moved: 200, recorded: 100, state: "broken" });
   });
 });
 

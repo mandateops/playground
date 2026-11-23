@@ -6,7 +6,7 @@
     <title>MandateOps playground</title>
     <meta
       name="description"
-      content="Payout bugs replayed step by step: where the money and the records stop agreeing, and how to fix it."
+      content="Money movement bugs, step by step, in %FLOW_LIST%: where the money and the records stop agreeing, and how to fix it."
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
@@ -31,19 +31,23 @@
       <main class="ws-main">
         <div class="ws-view">
           <header class="ws-view-head">
-            <h1>Payout bugs, replayed</h1>
+            <h1>When money and records disagree</h1>
             <p class="ws-lede">
-              We wrote these replays by hand. The service and the provider are made up,
-              and the bugs are common ones.
+              Hand-written illustrations of common bugs in %FLOW_LIST%. The backend,
+              provider and amounts are made up.
             </p>
           </header>
           <div id="stage" class="ws-stack" tabindex="-1"></div>
-          <h2 class="ws-section-title">Test your own service</h2>
+          <h2 class="ws-section-title">Test your own backend</h2>
           <div class="ws-note">
             <p>
-              MandateOps runs your payout service against a test provider that drops
-              replies and repeats events, lets your service crash mid-payout, then reports
-              pass or fail.
+              MandateOps tests your own backend against a stand-in for your payment
+              provider. It fails the provider and the network on the calls that move or
+              reverse money, then gives you evidence you can inspect and recheck.
+            </p>
+            <p class="ws-muted">
+              Pre-production today. No real money moves, no certification, and no
+              guarantee it finds every bug.
             </p>
             <div class="ws-button-row">
               <a class="ws-button ws-button-primary" href="%VITE_GUIDE_URL%"

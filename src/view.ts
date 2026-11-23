@@ -35,13 +35,13 @@ export function ledgerStatus(scenario: Scenario, ledger: Ledger): string {
   }
 }
 
-type LedgerParts = Readonly<{ status: string; sent: string; recorded: string }>;
+type LedgerParts = Readonly<{ status: string; moved: string; recorded: string }>;
 
 /** The ledger's state and totals as words, shared by the header and the live region. */
 export function ledgerParts(scenario: Scenario, ledger: Ledger): LedgerParts {
   return {
     status: ledgerStatus(scenario, ledger),
-    sent: `Sent ${formatCents(ledger.sent)}`,
+    moved: `Moved ${formatCents(ledger.moved)}`,
     recorded: `Recorded ${formatCents(ledger.recorded)}`,
   };
 }
@@ -78,58 +78,53 @@ function ledgerRow(label: string, tone: string, marker: HTMLElement | null): Led
   return { row, fill, value };
 }
 
-/** The ledger: two bars for sent and recorded, and the balance when there is one. */
+/** The ledger: two bars for moved and recorded, and the limit when there is one. */
 export function ledgerPanel(scenario: Scenario): LedgerPanel {
   const full = finalLedger(scenario);
-  const scale = Math.max(full.sent, full.recorded, scenario.balance ?? 0, 1);
-  const marker =
-    scenario.balance === undefined
-      ? null
-      : element("span", { class: "ws-ledger-marker" });
-  const sent = ledgerRow("Provider sent", "is-sent", marker);
-  const recorded = ledgerRow("Service recorded", "is-recorded", null);
+  const limit = scenario.limit;
+  const scale = Math.max(full.moved, full.recorded, limit?.amount ?? 0, 1);
+  const marker = limit ? element("span", { class: "ws-ledger-marker" }) : null;
+  const moved = ledgerRow("Provider moved", "is-moved", marker);
+  const recorded = ledgerRow("Backend recorded", "is-recorded", null);
   const status = element("p", { class: "ws-ledger-status" });
   const live = element("p", { class: "sr-only", role: "status" });
   // The live region already speaks the ledger; the header copy is visual only.
   const summary = element("p", { class: "ws-run-summary ws-num", "aria-hidden": "true" });
-  const balance =
-    scenario.balance === undefined
-      ? null
-      : element("p", { class: "ws-muted" }, [
-          element("span", { class: "ws-ledger-swatch", "aria-hidden": "true" }),
-          "Balance, marked on the sent bar: ",
-          element("span", { class: "ws-num" }, [formatCents(scenario.balance)]),
-        ]);
+  const limitLine = limit
+    ? element("p", { class: "ws-muted" }, [
+        element("span", { class: "ws-ledger-swatch", "aria-hidden": "true" }),
+        `${limit.label}, marked on the moved bar: `,
+        element("span", { class: "ws-num" }, [formatCents(limit.amount)]),
+      ])
+    : null;
   const root = element(
     "section",
     { class: "ws-note", "aria-labelledby": "ledger-title" },
     [
       element("h3", { class: "ws-label", id: "ledger-title" }, ["Ledger"]),
-      sent.row,
+      moved.row,
       recorded.row,
-      balance,
+      limitLine,
       status,
       live,
     ],
   );
-  if (scenario.balance !== undefined) {
-    root.style.setProperty("--balance", String(scenario.balance / scale));
-  }
+  if (limit) root.style.setProperty("--limit", String(limit.amount / scale));
   return {
     root,
     summary,
     show(ledger, announce) {
-      sent.value.textContent = formatCents(ledger.sent);
+      moved.value.textContent = formatCents(ledger.moved);
       recorded.value.textContent = formatCents(ledger.recorded);
-      sent.fill.style.setProperty("--fill", String(ledger.sent / scale));
+      moved.fill.style.setProperty("--fill", String(ledger.moved / scale));
       recorded.fill.style.setProperty("--fill", String(ledger.recorded / scale));
       const parts = ledgerParts(scenario, ledger);
       status.textContent = parts.status;
       root.dataset.state = ledger.state;
       summary.dataset.state = ledger.state;
-      summary.textContent = `${parts.status} · ${parts.sent} · ${parts.recorded}`;
+      summary.textContent = `${parts.status} · ${parts.moved} · ${parts.recorded}`;
       if (announce)
-        live.textContent = `${parts.status}. ${parts.sent}, ${parts.recorded}.`;
+        live.textContent = `${parts.status}. ${parts.moved}, ${parts.recorded}.`;
     },
   };
 }
@@ -213,7 +208,7 @@ export function fixSection(fix: Fix): HTMLElement {
       [element("code", {}, lines)],
     ),
     element("p", { class: "ws-muted" }, [
-      "Adapt this where your service calls the provider.",
+      "Adapt this where your backend calls the provider.",
     ]),
   ]);
 }
