@@ -634,7 +634,15 @@ button {
     padding: 0 16px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    /* Fades both edges so the sideways overflow is visible. */
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 16px,
+      #000 calc(100% - 24px),
+      transparent
+    );
   }
   .ws-nav-group {
     display: flex;

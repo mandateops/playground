@@ -15,6 +15,9 @@ export const FLOWS = [
 
 export type Flow = (typeof FLOWS)[number];
 
+/** The placeholder in `index.html` that the build replaces with `flowList()`. */
+export const FLOW_LIST_PLACEHOLDER = "%FLOW_LIST%";
+
 /** The picker's short label for each flow. */
 export const FLOW_LABELS: Readonly<Record<Flow, string>> = {
   payout: "Payouts and withdrawals",
@@ -67,6 +70,13 @@ export type Scenario = ScenarioBase &
   (Readonly<{ verdict: "fail"; fix: Fix }> | Readonly<{ verdict: "pass" }>);
 
 export type Verdict = Scenario["verdict"];
+
+/** Every flow label in lower case as one sentence list, for page copy. */
+export function flowList(): string {
+  const labels = FLOWS.map((flow) => FLOW_LABELS[flow].toLowerCase());
+  const last = labels.pop() ?? "";
+  return labels.length === 0 ? last : `${labels.join(", ")} and ${last}`;
+}
 
 /** The app's word for a verdict. */
 export function verdictLabel(verdict: Verdict): string {

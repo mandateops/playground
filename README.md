@@ -24,7 +24,7 @@ This repository has no MandateOps product code and makes no network calls. It is
 
 ## What MandateOps does
 
-MandateOps tests the financial correctness of your own backend on every provider call that moves or reverses money: payouts, transfers and withdrawals, payments in, refunds, recurring charges and cancellations. It runs your backend against a stand-in for your payment provider, fails the provider and the network, and reports pass or fail with evidence an engineer can inspect and recheck.
+MandateOps tests the financial correctness of your own backend on the provider calls that move or reverse money: payouts, transfers and withdrawals, payments in, refunds, recurring charges and cancellations. It runs your backend against a stand-in for your payment provider, fails the provider and the network, and reports pass or fail with evidence an engineer can inspect and recheck.
 
 It is pre-production today. It moves no real money, is not a certification, and does not guarantee that it finds every bug.
 

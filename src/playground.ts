@@ -44,6 +44,17 @@ function replayLink(scenario: Scenario): HTMLAnchorElement {
   ]);
 }
 
+/**
+ * Scrolls an overflowing picker sideways so the link is in view. Horizontal
+ * only, so a route change never moves the page; a picker that fits is left alone.
+ */
+export function revealSideways(picker: HTMLElement, link: HTMLElement): void {
+  if (picker.scrollWidth <= picker.clientWidth) return;
+  const offset = link.getBoundingClientRect().left - picker.getBoundingClientRect().left;
+  const gutter = parseFloat(getComputedStyle(picker).paddingLeft || "0");
+  picker.scrollLeft += offset - gutter;
+}
+
 export function mountPlayground(page: PlaygroundPage): void {
   const links: HTMLAnchorElement[] = [];
   // One labelled group per money flow, in the canonical flow order; empty flows are skipped.
@@ -82,11 +93,7 @@ export function mountPlayground(page: PlaygroundPage): void {
       link.classList.toggle("is-active", active);
       if (active) {
         link.setAttribute("aria-current", "page");
-        // On narrow screens the picker scrolls sideways; bring the active replay into view.
-        const offset =
-          link.getBoundingClientRect().left - page.picker.getBoundingClientRect().left;
-        page.picker.scrollLeft +=
-          offset - parseFloat(getComputedStyle(page.picker).paddingLeft || "0");
+        revealSideways(page.picker, link);
       } else link.removeAttribute("aria-current");
     }
     page.document.title = `${scenario.title} · MandateOps playground`;

@@ -13,7 +13,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "Each payout request moves money once.",
     verdict: "fail",
     outcome: "The contractor was paid twice for one request.",
-    result: "The provider sent $500.00 for a $250.00 request.",
+    result: "The provider moved $500.00 for a $250.00 request.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Gets a request to pay a contractor $250.00." },
       { atMs: 12, actor: "Backend", text: "Sends the payout to the provider." },
@@ -64,7 +64,7 @@ export const scenarios: readonly Scenario[] = [
     verdict: "fail",
     limit: { label: "Balance", amount: 30000 },
     outcome: "Two payouts spent $400.00 from a $300.00 balance.",
-    result: "$400.00 left a balance that held $300.00.",
+    result: "The provider moved $400.00 from a balance that held $300.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Gets a request to pay $200.00." },
       { atMs: 3, actor: "Backend", text: "Gets a second request to pay $200.00." },
@@ -122,7 +122,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "A payout ends paid or failed, never guessed.",
     verdict: "fail",
     outcome: "The money left, but the backend told the user it failed.",
-    result: "The provider sent $120.00 and the backend recorded $0.00.",
+    result: "The provider moved $120.00 and the backend recorded $0.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Gets a request to pay $120.00." },
       { atMs: 10, actor: "Backend", text: "Sends the payout to the provider." },
@@ -168,7 +168,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "Each provider event changes the records once.",
     verdict: "fail",
     outcome: "One $80.00 payout was recorded as $160.00 paid.",
-    result: "The provider sent $80.00 and the backend recorded $160.00.",
+    result: "The provider moved $80.00 and the backend recorded $160.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Sends a payout of $80.00." },
       { atMs: 120, actor: "Provider", text: "Sends $80.00.", moved: 8000 },
@@ -213,7 +213,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "Each payout request moves money once.",
     verdict: "pass",
     outcome: "The reply was lost, but the retry paid and recorded the payout once.",
-    result: "The provider sent $250.00 and the backend recorded $250.00.",
+    result: "The provider moved $250.00 and the backend recorded $250.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Gets a request to pay a contractor $250.00." },
       { atMs: 12, actor: "Backend", text: "Sends the payout with an idempotency key." },
@@ -271,8 +271,14 @@ export const scenarios: readonly Scenario[] = [
       pattern:
         "Treat a timeout as unknown, not failed. Keep the funds held and ask the provider for the withdrawal's status before returning anything.",
       diff: [
+        "- await provider.withdrawals.create({ amount, destination });",
+        "+ await provider.withdrawals.create(",
+        "+   { amount, destination },",
+        "+   { idempotencyKey: withdrawal.idempotencyKey },",
+        "+ );",
         "- catch (error) { await markFailed(withdrawal); await wallet.release(hold); }",
         "+ catch (error) {",
+        "+   // The hold stays in place while the status is unknown.",
         "+   const status = await provider.withdrawals.find(withdrawal.idempotencyKey);",
         "+   await settle(withdrawal, status);",
         "+ }",
@@ -286,7 +292,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "Each payment credits the customer once.",
     verdict: "fail",
     outcome: "One $50.00 payment credited the customer $100.00.",
-    result: "The provider collected $50.00 and the backend credited $100.00.",
+    result: "The provider moved $50.00 and the backend recorded $100.00.",
     steps: [
       {
         atMs: 0,
@@ -322,10 +328,11 @@ export const scenarios: readonly Scenario[] = [
       pattern:
         "Credit the customer and store the event id in one transaction, and skip any event you have already applied.",
       diff: [
-        "+ if (await db.eventApplied(event.id)) return reply(200);",
         "  await db.transaction(async (tx) => {",
+        "+   // A unique key on the event id: a conflict means it was already applied.",
+        "+   const fresh = await tx.insertEventOnce(event.id);",
+        "+   if (!fresh) return;",
         "    await tx.credit(event.customerId, event.amount);",
-        "+   await tx.recordEvent(event.id);",
         "  });",
       ].join("\n"),
     },
@@ -337,7 +344,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "An order paid at the provider is paid in the records.",
     verdict: "fail",
     outcome: "The customer paid $40.00, but the order was cancelled as unpaid.",
-    result: "The provider collected $40.00 and the backend recorded $0.00.",
+    result: "The provider moved $40.00 and the backend recorded $0.00.",
     steps: [
       {
         atMs: 0,
@@ -363,6 +370,11 @@ export const scenarios: readonly Scenario[] = [
       pattern:
         "Leave the order pending after a timeout and settle it from the provider's status or the payment webhook, never from the timeout alone.",
       diff: [
+        "- await provider.payments.create({ amount, customerId });",
+        "+ await provider.payments.create(",
+        "+   { amount, customerId },",
+        "+   { idempotencyKey: order.idempotencyKey },",
+        "+ );",
         "- catch (error) { await markUnpaid(order); }",
         "+ catch (error) {",
         "+   await markPending(order);",
@@ -380,7 +392,7 @@ export const scenarios: readonly Scenario[] = [
     verdict: "fail",
     limit: { label: "Original payment", amount: 6000 },
     outcome: "A $60.00 payment was refunded $120.00.",
-    result: "The provider refunded $120.00 against a $60.00 payment.",
+    result: "The provider moved $120.00 back against a $60.00 payment.",
     steps: [
       {
         atMs: 0,
@@ -434,7 +446,7 @@ export const scenarios: readonly Scenario[] = [
     verdict: "pass",
     limit: { label: "Original payment", amount: 6000 },
     outcome: "The reply was lost, but the retry refunded the customer once.",
-    result: "The provider refunded $60.00 and the backend recorded $60.00.",
+    result: "The provider moved $60.00 and the backend recorded $60.00.",
     steps: [
       {
         atMs: 0,
@@ -470,7 +482,7 @@ export const scenarios: readonly Scenario[] = [
     promise: "A subscription is charged once per period.",
     verdict: "fail",
     outcome: "The customer was charged $29.00 twice for one month.",
-    result: "The provider collected $58.00 for one $29.00 renewal.",
+    result: "The provider moved $58.00 for one $29.00 renewal.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Starts the monthly renewal of a $29.00 plan." },
       {
@@ -515,10 +527,10 @@ export const scenarios: readonly Scenario[] = [
     slug: "cancel-lost-race",
     flow: "cancellation",
     title: "Cancel lost the race",
-    promise: "A cancelled payment moved no money.",
+    promise: "Records follow the provider's answer to a cancel.",
     verdict: "fail",
     outcome: "The customer paid $75.00, but the order was cancelled and released.",
-    result: "The provider settled $75.00 and the backend recorded $0.00.",
+    result: "The provider moved $75.00 and the backend recorded $0.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Creates a $75.00 payment link for an order." },
       {
@@ -562,11 +574,11 @@ export const scenarios: readonly Scenario[] = [
     slug: "cancel-lost-race-fixed",
     flow: "cancellation",
     title: "Cancel lost the race, fixed",
-    promise: "A cancelled payment moved no money.",
+    promise: "Records follow the provider's answer to a cancel.",
     verdict: "pass",
     outcome:
       "The cancel was refused, so the payment was recorded as paid and a refund followed.",
-    result: "The provider settled $75.00 and the backend recorded $75.00.",
+    result: "The provider moved $75.00 and the backend recorded $75.00.",
     steps: [
       { atMs: 0, actor: "Backend", text: "Creates a $75.00 payment link for an order." },
       {
