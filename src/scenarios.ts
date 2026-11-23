@@ -511,4 +511,91 @@ export const scenarios: readonly Scenario[] = [
       ].join("\n"),
     },
   },
+  {
+    slug: "cancel-lost-race",
+    flow: "cancellation",
+    title: "Cancel lost the race",
+    promise: "A cancelled payment moved no money.",
+    verdict: "fail",
+    outcome: "The customer paid $75.00, but the order was cancelled and released.",
+    result: "The provider settled $75.00 and the backend recorded $0.00.",
+    steps: [
+      { atMs: 0, actor: "Backend", text: "Creates a $75.00 payment link for an order." },
+      {
+        atMs: 60000,
+        actor: "Provider",
+        text: "Settles the customer's $75.00 payment.",
+        moved: 7500,
+      },
+      {
+        atMs: 60050,
+        actor: "Backend",
+        text: "Gets the customer's request to cancel and sends the cancel to the provider.",
+      },
+      {
+        atMs: 60200,
+        actor: "Provider",
+        text: "Refuses the cancel because the payment has already settled.",
+      },
+      {
+        atMs: 60201,
+        actor: "Backend",
+        text: "Ignores the refusal and marks the payment cancelled.",
+        problem: true,
+      },
+      { atMs: 60210, actor: "Backend", text: "Releases the order." },
+    ],
+    fix: {
+      pattern:
+        "Treat the cancel reply as authoritative. Keep the record pending until the provider confirms it cancelled, and if the payment already settled, follow up with a refund.",
+      diff: [
+        "- await provider.payments.cancel(payment.id);",
+        "- await markCancelled(payment);",
+        "+ await markPending(payment);",
+        "+ const reply = await provider.payments.cancel(payment.id);",
+        '+ if (reply.status === "cancelled") await markCancelled(payment);',
+        "+ else await settleThenRefund(payment, reply);",
+      ].join("\n"),
+    },
+  },
+  {
+    slug: "cancel-lost-race-fixed",
+    flow: "cancellation",
+    title: "Cancel lost the race, fixed",
+    promise: "A cancelled payment moved no money.",
+    verdict: "pass",
+    outcome:
+      "The cancel was refused, so the payment was recorded as paid and a refund followed.",
+    result: "The provider settled $75.00 and the backend recorded $75.00.",
+    steps: [
+      { atMs: 0, actor: "Backend", text: "Creates a $75.00 payment link for an order." },
+      {
+        atMs: 60000,
+        actor: "Provider",
+        text: "Settles the customer's $75.00 payment.",
+        moved: 7500,
+      },
+      {
+        atMs: 60050,
+        actor: "Backend",
+        text: "Gets the customer's request to cancel and sends the cancel to the provider.",
+      },
+      {
+        atMs: 60200,
+        actor: "Provider",
+        text: "Refuses the cancel because the payment has already settled.",
+      },
+      {
+        atMs: 60201,
+        actor: "Backend",
+        text: "Keeps the payment pending and reads the refusal as settled.",
+      },
+      {
+        atMs: 60210,
+        actor: "Backend",
+        text: "Records the $75.00 payment and queues a refund for the customer.",
+        recorded: 7500,
+      },
+    ],
+  },
 ];

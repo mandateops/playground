@@ -5,7 +5,13 @@ import type { Cents } from "./money";
 export type Actor = "Backend" | "Provider" | "Network" | "Webhook";
 
 /** The money flows a replay can show, in the order the picker lists them. */
-export const FLOWS = ["payout", "payment", "refund", "recurring"] as const;
+export const FLOWS = [
+  "payout",
+  "payment",
+  "refund",
+  "recurring",
+  "cancellation",
+] as const;
 
 export type Flow = (typeof FLOWS)[number];
 
@@ -15,6 +21,7 @@ export const FLOW_LABELS: Readonly<Record<Flow, string>> = {
   payment: "Payments in",
   refund: "Refunds",
   recurring: "Recurring charges",
+  cancellation: "Cancellations",
 };
 
 export type Step = Readonly<{
