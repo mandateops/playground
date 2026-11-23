@@ -147,9 +147,28 @@ button {
   font-weight: 500;
 }
 .ws-side .ws-label {
+  margin-bottom: 8px;
   padding: 0 10px;
 }
 .ws-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ws-nav-group + .ws-nav-group {
+  margin-top: 12px;
+}
+.ws-nav-group-label {
+  margin: 0 0 2px;
+  padding: 0 10px;
+  color: var(--ws-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.ws-nav-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -424,7 +443,7 @@ button {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--balance) * 100%);
+  left: calc(var(--limit) * 100%);
   width: 2px;
   background: var(--ws-fail);
 }
@@ -605,13 +624,41 @@ button {
   .ws-side-foot {
     display: none;
   }
+  /* The flows scroll sideways inside the nav, so the page itself never does.
+     The nav is the containing block for the visually hidden verdicts. */
   .ws-nav {
+    position: relative;
     flex-direction: row;
-    flex-wrap: wrap;
+    gap: 16px;
+    margin: 0 -16px;
+    padding: 0 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .ws-nav-group {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2px;
+  }
+  .ws-nav-group + .ws-nav-group {
+    margin-top: 0;
+    border-left: 1px solid var(--ws-line);
+    padding-left: 12px;
+  }
+  .ws-nav-group-label {
+    margin: 0;
+    padding: 0 6px 0 0;
+    white-space: nowrap;
+  }
+  .ws-nav-list {
+    flex-direction: row;
   }
   .ws-nav-item {
     min-height: 44px;
     flex: none;
+    white-space: nowrap;
     padding: 0 8px;
     font-size: 13px;
   }

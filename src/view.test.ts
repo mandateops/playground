@@ -42,7 +42,7 @@ describe("ledgerParts", () => {
   test("words the state and both totals", () => {
     expect(ledgerParts(lostReply, ledgerAt(lostReply, 2))).toEqual({
       status: "Records not caught up yet",
-      sent: "Sent $250.00",
+      moved: "Moved $250.00",
       recorded: "Recorded $0.00",
     });
   });
@@ -121,7 +121,7 @@ describe("renderScenario", () => {
     stepButtons()[2]?.click();
     const summary = view.root.querySelector(".ws-run-head .ws-run-summary");
     expect(summary?.textContent).toBe(
-      "Records not caught up yet · Sent $250.00 · Recorded $0.00",
+      "Records not caught up yet · Moved $250.00 · Recorded $0.00",
     );
     expect(summary?.getAttribute("aria-hidden")).toBe("true");
   });

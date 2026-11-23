@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { mountPlayground, scenarioFor, slugOf } from "./playground";
+import { FLOW_LABELS, FLOWS } from "./scenario";
 import { scenarios } from "./scenarios";
 
 describe("slugOf", () => {
@@ -67,6 +68,17 @@ describe("mountPlayground", () => {
   test("lists every replay with its verdict", () => {
     expect(picker.querySelectorAll("a").length).toBe(scenarios.length);
     expect(picker.textContent).toContain("Passed");
+  });
+
+  test("groups replays under one labelled list per money flow", () => {
+    const labels = [...picker.querySelectorAll(".ws-nav-group-label")].map(
+      (node) => node.textContent,
+    );
+    expect(labels).toEqual(FLOWS.map((flow) => FLOW_LABELS[flow]));
+    const refunds = picker.querySelector('[aria-labelledby="flow-refund"]');
+    expect(refunds?.querySelectorAll("a").length).toBe(
+      scenarios.filter((scenario) => scenario.flow === "refund").length,
+    );
   });
 
   test("shows the first replay with no hash", () => {

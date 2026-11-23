@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { finalLedger } from "./ledger";
+import { FLOWS } from "./scenario";
 import { scenarios } from "./scenarios";
 
 describe("scenarios", () => {
@@ -7,6 +8,15 @@ describe("scenarios", () => {
     const slugs = scenarios.map((scenario) => scenario.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
     for (const slug of slugs) expect(slug).toMatch(/^[a-z0-9-]+$/);
+  });
+
+  test("every money flow has a failing replay", () => {
+    for (const flow of FLOWS) {
+      const failing = scenarios.filter(
+        (scenario) => scenario.flow === flow && scenario.verdict === "fail",
+      );
+      expect(failing.length).toBeGreaterThan(0);
+    }
   });
 
   for (const scenario of scenarios) {
@@ -28,9 +38,9 @@ describe("scenarios", () => {
           return;
         }
         expect(ledger.state).toBe("broken");
-        const overBalance =
-          scenario.balance !== undefined && ledger.sent > scenario.balance;
-        expect(ledger.sent !== ledger.recorded || overBalance).toBe(true);
+        const overLimit =
+          scenario.limit !== undefined && ledger.moved > scenario.limit.amount;
+        expect(ledger.moved !== ledger.recorded || overLimit).toBe(true);
       });
 
       test("copy has no em or en dashes", () => {
@@ -39,6 +49,7 @@ describe("scenarios", () => {
           scenario.promise,
           scenario.outcome,
           scenario.result,
+          scenario.limit?.label ?? "",
           scenario.verdict === "fail" ? scenario.fix.pattern : "",
           ...scenario.steps.map((step) => step.text),
         ].join(" ");

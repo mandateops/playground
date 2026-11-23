@@ -2,19 +2,38 @@
 import type { Cents } from "./money";
 
 /** Who acts in a step. */
-export type Actor = "Service" | "Provider" | "Network" | "Webhook";
+export type Actor = "Backend" | "Provider" | "Network" | "Webhook";
+
+/** The money flows a replay can show, in the order the picker lists them. */
+export const FLOWS = ["payout", "payment", "refund", "recurring"] as const;
+
+export type Flow = (typeof FLOWS)[number];
+
+/** The picker's short label for each flow. */
+export const FLOW_LABELS: Readonly<Record<Flow, string>> = {
+  payout: "Payouts and withdrawals",
+  payment: "Payments in",
+  refund: "Refunds",
+  recurring: "Recurring charges",
+};
 
 export type Step = Readonly<{
   /** Milliseconds since the run started. */
   atMs: number;
   actor: Actor;
   text: string;
-  /** Money the provider moved in this step. */
-  sent?: Cents;
-  /** Money the service recorded as paid in this step. */
+  /** Money the provider moved in this step, in either direction. */
+  moved?: Cents;
+  /** Money the backend recorded as moved in this step. */
   recorded?: Cents;
   /** Marks the one step where a failing replay breaks its promise. */
   problem?: true;
+}>;
+
+/** A ceiling the moved money must stay within, such as a balance or the original payment. */
+export type Limit = Readonly<{
+  label: string;
+  amount: Cents;
 }>;
 
 export type Fix = Readonly<{
@@ -24,6 +43,7 @@ export type Fix = Readonly<{
 
 type ScenarioBase = Readonly<{
   slug: string;
+  flow: Flow;
   title: string;
   /** The property the run checks, in plain words. */
   promise: string;
@@ -31,8 +51,7 @@ type ScenarioBase = Readonly<{
   outcome: string;
   /** The closing line of the story: what the run found. */
   result: string;
-  /** Money available to pay out, when the scenario has a limit. */
-  balance?: Cents;
+  limit?: Limit;
   steps: readonly Step[];
 }>;
 
