@@ -112,7 +112,7 @@ export const scenarios: readonly Scenario[] = [
     slug: "renewal-charged-twice",
     flow: "recurring",
     title: "Double renewal",
-    promise: "A subscription is charged once per period.",
+    promise: "A renewal charges the saved card once per period.",
     verdict: "fail",
     outcome: "The customer was charged $29.00 twice for one month.",
     result: "The provider moved $58.00 for one $29.00 renewal.",
