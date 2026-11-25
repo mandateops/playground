@@ -11,15 +11,15 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <button type="button" class="ws-skip" id="skip">Skip to the replay</button>
+    <button type="button" class="ws-skip" id="skip">Skip to the run</button>
     <div class="ws">
       <aside class="ws-side">
         <div class="ws-side-inner">
           <a class="ws-brand" href="%VITE_SITE_URL%"
             >MandateOps <span>playground</span></a
           >
-          <nav aria-labelledby="replays-label">
-            <p id="replays-label" class="ws-label">Replays</p>
+          <nav aria-labelledby="scenarios-label">
+            <p id="scenarios-label" class="ws-label">Scenarios</p>
             <ul id="picker" class="ws-nav"></ul>
           </nav>
           <div class="ws-side-foot">
@@ -35,6 +35,11 @@
             <p class="ws-lede">
               Hand-written illustrations of common bugs in %FLOW_LIST%. The backend,
               provider and amounts are made up.
+            </p>
+            <p class="ws-muted">
+              Beyond these three, MandateOps tests duplicate and late webhooks, crashes
+              after money moves, timeouts, declines, 3-D Secure, disputes and retries.
+              <a href="%VITE_GUIDE_URL%">Getting started guide</a>
             </p>
           </header>
           <div id="stage" class="ws-stack" tabindex="-1"></div>

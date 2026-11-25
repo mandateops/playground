@@ -8,8 +8,8 @@ import { finalLedger, ledgerAt, problemIndex, type Ledger } from "./ledger";
 import { formatCents } from "./money";
 import { verdictLabel, type Fix, type Scenario, type Step } from "./scenario";
 
-/** How long each step stays on screen during a replay. */
-export const REPLAY_STEP_MS = 700;
+/** How long each step stays on screen while a scenario plays. */
+export const STEP_MS = 700;
 
 /** The app's threshold for saying a gap: shorter gaps get no line. */
 export const LATER_MS = 5000;
@@ -215,13 +215,13 @@ export function fixSection(fix: Fix): HTMLElement {
 
 export type ScenarioView = Readonly<{
   root: HTMLElement;
-  /** The run title, which takes focus when the replay changes. */
+  /** The run title, which takes focus when the scenario changes. */
   title: HTMLElement;
-  /** Stops a running replay. */
+  /** Stops a running playback. */
   dispose: () => void;
 }>;
 
-/** The whole replay; this function owns only the cursor and the replay timer. */
+/** The whole scenario; this function owns only the cursor and the playback timer. */
 export function renderScenario(scenario: Scenario): ScenarioView {
   const lastIndex = scenario.steps.length - 1;
   let cursor = lastIndex;
@@ -229,10 +229,10 @@ export function renderScenario(scenario: Scenario): ScenarioView {
 
   const ledger = ledgerPanel(scenario);
   const steps = stepItems(scenario);
-  const replayButton = element(
+  const playButton = element(
     "button",
     { type: "button", class: "ws-button ws-button-secondary ws-button-small" },
-    ["Replay"],
+    ["Play"],
   );
 
   function paint(announce: boolean): void {
@@ -240,7 +240,7 @@ export function renderScenario(scenario: Scenario): ScenarioView {
     steps.forEach(({ item, button }, index) => {
       item.classList.toggle("is-pending", index > cursor);
       item.classList.toggle("is-current", index === cursor);
-      // A step is only called the problem once the replay has reached it.
+      // A step is only called the problem once playback has reached it.
       const reached = scenario.steps[index]?.problem === true && index <= cursor;
       item.setAttribute("aria-label", stepLabel(index, reached));
       if (index === cursor) button.setAttribute("aria-current", "step");
@@ -256,7 +256,7 @@ export function renderScenario(scenario: Scenario): ScenarioView {
   function stop(): void {
     if (timer === undefined) return;
     clearTimer();
-    replayButton.textContent = "Replay";
+    playButton.textContent = "Play";
     paint(true);
   }
 
@@ -272,24 +272,24 @@ export function renderScenario(scenario: Scenario): ScenarioView {
     });
   });
 
-  replayButton.addEventListener("click", () => {
+  playButton.addEventListener("click", () => {
     if (timer !== undefined) {
       stop();
       return;
     }
     moveTo(0, false);
-    replayButton.textContent = "Stop";
+    playButton.textContent = "Stop";
     timer = setInterval(() => {
       moveTo(cursor + 1, false);
       if (cursor >= lastIndex) stop();
-    }, REPLAY_STEP_MS);
+    }, STEP_MS);
   });
 
   const title = element("h2", { class: "ws-run-name", tabindex: "-1" }, [scenario.title]);
   const header = element("header", { class: "ws-run-head" }, [
     title,
     ledger.summary,
-    replayButton,
+    playButton,
   ]);
   const headObserver =
     typeof ResizeObserver === "undefined"

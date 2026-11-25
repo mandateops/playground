@@ -1,6 +1,6 @@
 /**
  * Money as integer minor units (cents). Every sum is checked so a scenario
- * can never silently overflow into a wrong total. The replays use one
+ * can never silently overflow into a wrong total. The scenarios use one
  * illustrative currency, US dollars, so formatting is fixed to it.
  */
 

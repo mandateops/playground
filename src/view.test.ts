@@ -5,7 +5,7 @@ import {
   laterLine,
   ledgerStatus,
   renderScenario,
-  REPLAY_STEP_MS,
+  STEP_MS,
   stepLabel,
   writeHeadRoom,
   HEAD_ROOM_VARIABLE,
@@ -22,8 +22,10 @@ describe("laterLine", () => {
   });
 
   test("words a gap of five seconds or more as the app does", () => {
-    const webhook = scenarios.find((scenario) => scenario.slug === "duplicate-webhook");
-    expect(laterLine(webhook?.steps ?? [], 4)).toBe("10 s later");
+    const webhook = scenarios.find(
+      (scenario) => scenario.slug === "payment-webhook-twice",
+    );
+    expect(laterLine(webhook?.steps ?? [], 3)).toBe("10 s later");
   });
 
   test("says nothing for an index past the end", () => {
@@ -87,11 +89,11 @@ describe("renderScenario", () => {
     [...view.root.querySelectorAll(".ws-ledger-value")].map(
       (node) => node.textContent ?? "",
     );
-  const replayButton = (): HTMLButtonElement => {
+  const playButton = (): HTMLButtonElement => {
     const button = [...view.root.querySelectorAll<HTMLButtonElement>("button")].find(
-      (each) => each.textContent === "Replay" || each.textContent === "Stop",
+      (each) => each.textContent === "Play" || each.textContent === "Stop",
     );
-    if (!button) throw new Error("no replay button");
+    if (!button) throw new Error("no play button");
     return button;
   };
 
@@ -140,31 +142,31 @@ describe("renderScenario", () => {
     expect(problem?.getAttribute("aria-label")).toBe("Step 6, the problem");
   });
 
-  test("replay advances one step per interval and stops at the end", () => {
-    replayButton().click();
+  test("play advances one step per interval and stops at the end", () => {
+    playButton().click();
     expect(currentIndex()).toBe(0);
-    expect(replayButton().textContent).toBe("Stop");
-    jest.advanceTimersByTime(REPLAY_STEP_MS * 2);
+    expect(playButton().textContent).toBe("Stop");
+    jest.advanceTimersByTime(STEP_MS * 2);
     expect(currentIndex()).toBe(2);
-    jest.advanceTimersByTime(REPLAY_STEP_MS * lostReply.steps.length);
+    jest.advanceTimersByTime(STEP_MS * lostReply.steps.length);
     expect(currentIndex()).toBe(lostReply.steps.length - 1);
-    expect(replayButton().textContent).toBe("Replay");
+    expect(playButton().textContent).toBe("Play");
   });
 
-  test("clicking Stop halts the replay", () => {
-    replayButton().click();
-    jest.advanceTimersByTime(REPLAY_STEP_MS);
-    replayButton().click();
+  test("clicking Stop halts playback", () => {
+    playButton().click();
+    jest.advanceTimersByTime(STEP_MS);
+    playButton().click();
     const stoppedAt = currentIndex();
-    jest.advanceTimersByTime(REPLAY_STEP_MS * 3);
+    jest.advanceTimersByTime(STEP_MS * 3);
     expect(currentIndex()).toBe(stoppedAt);
-    expect(replayButton().textContent).toBe("Replay");
+    expect(playButton().textContent).toBe("Play");
   });
 
-  test("dispose clears a running replay", () => {
-    replayButton().click();
+  test("dispose clears a running playback", () => {
+    playButton().click();
     view.dispose();
-    jest.advanceTimersByTime(REPLAY_STEP_MS * 3);
+    jest.advanceTimersByTime(STEP_MS * 3);
     expect(currentIndex()).toBe(0);
   });
 

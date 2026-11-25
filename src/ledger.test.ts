@@ -4,7 +4,7 @@ import type { Scenario } from "./scenario";
 
 const sample: Scenario = {
   slug: "sample",
-  flow: "refund",
+  flow: "payment",
   title: "Sample",
   promise: "Money moves once.",
   verdict: "fail",
@@ -54,5 +54,27 @@ describe("problemIndex", () => {
 
   test("is -1 when the promise holds", () => {
     expect(problemIndex({ ...sample, steps: [] })).toBe(-1);
+  });
+});
+
+describe("finalLedger with a limit", () => {
+  test("a passing run ends agreeing and within its limit", () => {
+    const within: Scenario = {
+      slug: "within",
+      flow: "payment",
+      title: "Within",
+      promise: "Money stays within the limit.",
+      verdict: "pass",
+      outcome: "Paid once.",
+      result: "Sent once.",
+      limit: { label: "Original payment", amount: 100 },
+      steps: [
+        { atMs: 0, actor: "Provider", text: "Sends.", moved: 100 },
+        { atMs: 1, actor: "Backend", text: "Records.", recorded: 100 },
+      ],
+    };
+    const ledger = finalLedger(within);
+    expect(ledger.state).toBe("agree");
+    expect(ledger.moved).toBeLessThanOrEqual(within.limit?.amount ?? 0);
   });
 });

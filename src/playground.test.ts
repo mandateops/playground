@@ -5,7 +5,7 @@ import { scenarios } from "./scenarios";
 
 describe("slugOf", () => {
   test("strips the hash and decodes", () => {
-    expect(slugOf("#balance-race")).toBe("balance-race");
+    expect(slugOf("#renewal-charged-twice")).toBe("renewal-charged-twice");
     expect(slugOf("")).toBe("");
   });
 
@@ -16,7 +16,9 @@ describe("slugOf", () => {
 
 describe("scenarioFor", () => {
   test("finds a scenario by slug", () => {
-    expect(scenarioFor(scenarios, "duplicate-webhook")?.slug).toBe("duplicate-webhook");
+    expect(scenarioFor(scenarios, "payment-webhook-twice")?.slug).toBe(
+      "payment-webhook-twice",
+    );
   });
 
   test("falls back to the first scenario for an unknown slug", () => {
@@ -89,34 +91,34 @@ describe("mountPlayground", () => {
     });
   });
 
-  test("lists every replay with its verdict", () => {
+  test("lists every scenario with its verdict", () => {
     expect(picker.querySelectorAll("a").length).toBe(scenarios.length);
-    expect(picker.textContent).toContain("Passed");
+    expect(picker.textContent).toContain("Failed");
   });
 
-  test("groups replays under one labelled list per money flow", () => {
+  test("groups scenarios under one labelled list per money flow", () => {
     const labels = [...picker.querySelectorAll(".ws-nav-group-label")].map(
       (node) => node.textContent,
     );
     expect(labels).toEqual(FLOWS.map((flow) => FLOW_LABELS[flow]));
-    const refunds = picker.querySelector('[aria-labelledby="flow-refund"]');
-    expect(refunds?.querySelectorAll("a").length).toBe(
-      scenarios.filter((scenario) => scenario.flow === "refund").length,
+    const recurring = picker.querySelector('[aria-labelledby="flow-recurring"]');
+    expect(recurring?.querySelectorAll("a").length).toBe(
+      scenarios.filter((scenario) => scenario.flow === "recurring").length,
     );
   });
 
-  test("lists every replay exactly once across the groups", () => {
+  test("lists every scenario exactly once across the groups", () => {
     const hrefs = [...picker.querySelectorAll(".ws-nav-group a")].map((link) =>
       link.getAttribute("href"),
     );
     expect(hrefs.sort()).toEqual(scenarios.map((scenario) => `#${scenario.slug}`).sort());
   });
 
-  test("shows the first replay with no hash", () => {
+  test("shows the first scenario with no hash", () => {
     expect(shownTitle()).toBe(scenarios[0]?.title);
   });
 
-  test("rewrites an unknown or empty hash to the replay it shows", () => {
+  test("rewrites an unknown or empty hash to the scenario it shows", () => {
     expect(replaced).toEqual([`#${scenarios[0]?.slug ?? ""}`]);
   });
 
@@ -124,12 +126,12 @@ describe("mountPlayground", () => {
     expect(page.title).toBe(`${scenarios[0]?.title ?? ""} · MandateOps playground`);
   });
 
-  test("a hash change swaps the replay, marks the link and moves focus", () => {
-    location.hash = "#balance-race";
+  test("a hash change swaps the scenario, marks the link and moves focus", () => {
+    location.hash = "#renewal-charged-twice";
     listeners.get("hashchange")?.();
-    expect(shownTitle()).toBe("Balance race");
+    expect(shownTitle()).toBe("Double renewal");
     expect(picker.querySelector('[aria-current="page"]')?.getAttribute("href")).toBe(
-      "#balance-race",
+      "#renewal-charged-twice",
     );
     expect(document.activeElement).toBe(stage.querySelector(".ws-run-name"));
   });
