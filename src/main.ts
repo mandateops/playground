@@ -1,6 +1,6 @@
 /**
  * Entry point: the scenario list and hash routing. Each scenario has its own
- * shareable address, for example `#balance-race`.
+ * shareable address, for example `#lost-reply`.
  */
 import "@fontsource-variable/geist";
 import "@fontsource-variable/geist-mono";

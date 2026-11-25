@@ -321,7 +321,7 @@ button {
 
 /* The run: verdict and ledger on top, the story below. */
 /* The run header stays on screen while the story scrolls, as in the app's run
-   view, carrying the title, the ledger in one line and the scenario control. */
+   view, carrying the title, the ledger in one line and the play control. */
 .ws-run-head {
   position: sticky;
   z-index: 15;

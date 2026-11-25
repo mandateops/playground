@@ -89,11 +89,11 @@ describe("renderScenario", () => {
     [...view.root.querySelectorAll(".ws-ledger-value")].map(
       (node) => node.textContent ?? "",
     );
-  const reproduceButton = (): HTMLButtonElement => {
+  const playButton = (): HTMLButtonElement => {
     const button = [...view.root.querySelectorAll<HTMLButtonElement>("button")].find(
-      (each) => each.textContent === "Reproduce" || each.textContent === "Stop",
+      (each) => each.textContent === "Play" || each.textContent === "Stop",
     );
-    if (!button) throw new Error("no reproduce button");
+    if (!button) throw new Error("no play button");
     return button;
   };
 
@@ -142,29 +142,29 @@ describe("renderScenario", () => {
     expect(problem?.getAttribute("aria-label")).toBe("Step 6, the problem");
   });
 
-  test("reproduce advances one step per interval and stops at the end", () => {
-    reproduceButton().click();
+  test("play advances one step per interval and stops at the end", () => {
+    playButton().click();
     expect(currentIndex()).toBe(0);
-    expect(reproduceButton().textContent).toBe("Stop");
+    expect(playButton().textContent).toBe("Stop");
     jest.advanceTimersByTime(STEP_MS * 2);
     expect(currentIndex()).toBe(2);
     jest.advanceTimersByTime(STEP_MS * lostReply.steps.length);
     expect(currentIndex()).toBe(lostReply.steps.length - 1);
-    expect(reproduceButton().textContent).toBe("Reproduce");
+    expect(playButton().textContent).toBe("Play");
   });
 
-  test("clicking Stop halts the reproduction", () => {
-    reproduceButton().click();
+  test("clicking Stop halts playback", () => {
+    playButton().click();
     jest.advanceTimersByTime(STEP_MS);
-    reproduceButton().click();
+    playButton().click();
     const stoppedAt = currentIndex();
     jest.advanceTimersByTime(STEP_MS * 3);
     expect(currentIndex()).toBe(stoppedAt);
-    expect(reproduceButton().textContent).toBe("Reproduce");
+    expect(playButton().textContent).toBe("Play");
   });
 
-  test("dispose clears a running reproduction", () => {
-    reproduceButton().click();
+  test("dispose clears a running playback", () => {
+    playButton().click();
     view.dispose();
     jest.advanceTimersByTime(STEP_MS * 3);
     expect(currentIndex()).toBe(0);

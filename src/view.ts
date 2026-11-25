@@ -8,7 +8,7 @@ import { finalLedger, ledgerAt, problemIndex, type Ledger } from "./ledger";
 import { formatCents } from "./money";
 import { verdictLabel, type Fix, type Scenario, type Step } from "./scenario";
 
-/** How long each step stays on screen while a scenario reproduces. */
+/** How long each step stays on screen while a scenario plays. */
 export const STEP_MS = 700;
 
 /** The app's threshold for saying a gap: shorter gaps get no line. */
@@ -217,11 +217,11 @@ export type ScenarioView = Readonly<{
   root: HTMLElement;
   /** The run title, which takes focus when the scenario changes. */
   title: HTMLElement;
-  /** Stops a running reproduction. */
+  /** Stops a running playback. */
   dispose: () => void;
 }>;
 
-/** The whole scenario; this function owns only the cursor and the reproduction timer. */
+/** The whole scenario; this function owns only the cursor and the playback timer. */
 export function renderScenario(scenario: Scenario): ScenarioView {
   const lastIndex = scenario.steps.length - 1;
   let cursor = lastIndex;
@@ -229,10 +229,10 @@ export function renderScenario(scenario: Scenario): ScenarioView {
 
   const ledger = ledgerPanel(scenario);
   const steps = stepItems(scenario);
-  const reproduceButton = element(
+  const playButton = element(
     "button",
     { type: "button", class: "ws-button ws-button-secondary ws-button-small" },
-    ["Reproduce"],
+    ["Play"],
   );
 
   function paint(announce: boolean): void {
@@ -240,7 +240,7 @@ export function renderScenario(scenario: Scenario): ScenarioView {
     steps.forEach(({ item, button }, index) => {
       item.classList.toggle("is-pending", index > cursor);
       item.classList.toggle("is-current", index === cursor);
-      // A step is only called the problem once the reproduction has reached it.
+      // A step is only called the problem once playback has reached it.
       const reached = scenario.steps[index]?.problem === true && index <= cursor;
       item.setAttribute("aria-label", stepLabel(index, reached));
       if (index === cursor) button.setAttribute("aria-current", "step");
@@ -256,7 +256,7 @@ export function renderScenario(scenario: Scenario): ScenarioView {
   function stop(): void {
     if (timer === undefined) return;
     clearTimer();
-    reproduceButton.textContent = "Reproduce";
+    playButton.textContent = "Play";
     paint(true);
   }
 
@@ -272,13 +272,13 @@ export function renderScenario(scenario: Scenario): ScenarioView {
     });
   });
 
-  reproduceButton.addEventListener("click", () => {
+  playButton.addEventListener("click", () => {
     if (timer !== undefined) {
       stop();
       return;
     }
     moveTo(0, false);
-    reproduceButton.textContent = "Stop";
+    playButton.textContent = "Stop";
     timer = setInterval(() => {
       moveTo(cursor + 1, false);
       if (cursor >= lastIndex) stop();
@@ -289,7 +289,7 @@ export function renderScenario(scenario: Scenario): ScenarioView {
   const header = element("header", { class: "ws-run-head" }, [
     title,
     ledger.summary,
-    reproduceButton,
+    playButton,
   ]);
   const headObserver =
     typeof ResizeObserver === "undefined"
