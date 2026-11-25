@@ -4,7 +4,7 @@ import type { Scenario } from "./scenario";
 
 const sample: Scenario = {
   slug: "sample",
-  flow: "refund",
+  flow: "payment",
   title: "Sample",
   promise: "Money moves once.",
   verdict: "fail",

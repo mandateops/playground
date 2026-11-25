@@ -11,16 +11,7 @@ describe("scenarios", () => {
     for (const slug of slugs) expect(slug).toMatch(/^[a-z0-9-]+$/);
   });
 
-  test("a passing replay with a limit ends within it", () => {
-    const fixed = scenarios.find((scenario) => scenario.slug === "refund-retried-fixed");
-    if (!fixed?.limit) throw new Error("refund-retried-fixed needs a limit");
-    const ledger = finalLedger(fixed);
-    expect(fixed.verdict).toBe("pass");
-    expect(ledger.state).toBe("agree");
-    expect(ledger.moved).toBeLessThanOrEqual(fixed.limit.amount);
-  });
-
-  test("every money flow has a failing replay", () => {
+  test("every money flow has a failing scenario", () => {
     for (const flow of FLOWS) {
       const failing = scenarios.filter(
         (scenario) => scenario.flow === flow && scenario.verdict === "fail",

@@ -1,5 +1,5 @@
 /**
- * The replay list and hash routing, kept apart from the entry point so it
+ * The scenario list and hash routing, kept apart from the entry point so it
  * can be tested against a DOM.
  */
 import { element } from "./dom";
@@ -34,8 +34,8 @@ export function scenarioFor(
   return scenarios.find((each) => each.slug === slug) ?? scenarios[0];
 }
 
-/** One picker link for a replay, with its verdict. */
-function replayLink(scenario: Scenario): HTMLAnchorElement {
+/** One picker link for a scenario, with its verdict. */
+function scenarioLink(scenario: Scenario): HTMLAnchorElement {
   return element("a", { href: `#${scenario.slug}`, class: "ws-nav-item" }, [
     scenario.title,
     element("span", { class: `ws-nav-state is-${scenario.verdict}` }, [
@@ -61,7 +61,7 @@ export function mountPlayground(page: PlaygroundPage): void {
   for (const flow of FLOWS) {
     const flowLinks = page.scenarios
       .filter((scenario) => scenario.flow === flow)
-      .map(replayLink);
+      .map(scenarioLink);
     if (flowLinks.length === 0) continue;
     links.push(...flowLinks);
     const labelId = `flow-${flow}`;
@@ -83,7 +83,7 @@ export function mountPlayground(page: PlaygroundPage): void {
     const slug = slugOf(page.location.hash);
     const scenario = scenarioFor(page.scenarios, slug);
     if (!scenario) return;
-    // An unknown or empty hash shows the first replay; make the address match it.
+    // An unknown or empty hash shows the first scenario; make the address match it.
     if (slug !== scenario.slug) page.history.replaceState(null, "", `#${scenario.slug}`);
     current?.dispose();
     current = renderScenario(scenario);

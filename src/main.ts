@@ -1,5 +1,5 @@
 /**
- * Entry point: the replay list and hash routing. Each replay has its own
+ * Entry point: the scenario list and hash routing. Each scenario has its own
  * shareable address, for example `#balance-race`.
  */
 import "@fontsource-variable/geist";

@@ -109,7 +109,7 @@ button {
   translate: 0 0;
 }
 
-/* Shell: a sidebar of replays and the run beside it. */
+/* Shell: a sidebar of scenarios and the run beside it. */
 .ws {
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
@@ -321,7 +321,7 @@ button {
 
 /* The run: verdict and ledger on top, the story below. */
 /* The run header stays on screen while the story scrolls, as in the app's run
-   view, carrying the title, the ledger in one line and the replay control. */
+   view, carrying the title, the ledger in one line and the scenario control. */
 .ws-run-head {
   position: sticky;
   z-index: 15;

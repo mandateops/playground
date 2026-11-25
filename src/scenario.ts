@@ -1,17 +1,11 @@
-/** The shape of one hand-written replay. */
+/** The shape of one hand-written scenario. */
 import type { Cents } from "./money";
 
 /** Who acts in a step. */
 export type Actor = "Backend" | "Provider" | "Network" | "Webhook";
 
-/** The money flows a replay can show, in the order the picker lists them. */
-export const FLOWS = [
-  "payout",
-  "payment",
-  "refund",
-  "recurring",
-  "cancellation",
-] as const;
+/** The money flows a scenario can show, in the order the picker lists them. */
+export const FLOWS = ["payout", "payment", "recurring"] as const;
 
 export type Flow = (typeof FLOWS)[number];
 
@@ -22,9 +16,7 @@ export const FLOW_LIST_PLACEHOLDER = "%FLOW_LIST%";
 export const FLOW_LABELS: Readonly<Record<Flow, string>> = {
   payout: "Payouts and withdrawals",
   payment: "Payments in",
-  refund: "Refunds",
   recurring: "Recurring charges",
-  cancellation: "Cancellations",
 };
 
 export type Step = Readonly<{
@@ -36,7 +28,7 @@ export type Step = Readonly<{
   moved?: Cents;
   /** Money the backend recorded as moved in this step. */
   recorded?: Cents;
-  /** Marks the one step where a failing replay breaks its promise. */
+  /** Marks the one step where a failing scenario breaks its promise. */
   problem?: true;
 }>;
 
@@ -65,7 +57,7 @@ type ScenarioBase = Readonly<{
   steps: readonly Step[];
 }>;
 
-/** A failing replay always carries a fix; a passing one never does. */
+/** A failing scenario always carries a fix; a passing one never does. */
 export type Scenario = ScenarioBase &
   (Readonly<{ verdict: "fail"; fix: Fix }> | Readonly<{ verdict: "pass" }>);
 
